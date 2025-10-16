@@ -106,8 +106,8 @@ public class Heap<K extends Comparable<K>, V> {
             }
             
             // Compare with right child if it exists
-            if(this.data.get(i).getKey().compareTo(this.data.get(smallestIndex).getKey()) <= 0) {
-                // 当前节点已经小于等于子节点，heap property 满足
+            if(this.data.get(i).getKey().compareTo(this.data.get(smaller).getKey()) <= 0) {
+                // current node is already less than or equal to the smaller child, heap property is satisfied
                 break;
             }
             
