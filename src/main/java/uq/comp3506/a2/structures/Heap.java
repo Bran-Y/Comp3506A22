@@ -4,7 +4,6 @@ package uq.comp3506.a2.structures;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * Supplied by the COMP3506/7505 teaching team, Semester 2, 2025.
@@ -79,7 +78,9 @@ public class Heap<K extends Comparable<K>, V> {
                 break;
             }
             // swap two nodes' values
-            Collections.swap(this.data, i, p);
+            Entry<K, V> temp = this.data.get(i);
+            this.data.set(i, this.data.get(p));
+            this.data.set(p, temp);
             // continue to check the parent node's key
             i = p;
         }
@@ -111,7 +112,9 @@ public class Heap<K extends Comparable<K>, V> {
                 break;
             }
             // swap two nodes' values
-            Collections.swap(this.data, i, smaller);
+            Entry<K, V> temp = this.data.get(i);
+            this.data.set(i, this.data.get(smaller));
+            this.data.set(smaller, temp);
             // continue to check the smaller child node's key
             i = smaller;
         }
@@ -199,8 +202,7 @@ public class Heap<K extends Comparable<K>, V> {
             return null;
         }
         // Return a copy, not the original reference
-        Entry<K, V> original = this.data.get(0);
-        return new Entry<>(original.getKey(), original.getValue());
+      return this.data.get(0);
     }
 
     /**
