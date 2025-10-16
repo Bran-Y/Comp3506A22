@@ -71,10 +71,10 @@ public class Heap<K extends Comparable<K>, V> {
      * Swaps the node at index i upwards until the heap property is satisfied
      */
     private void upHeap(int i) {
-        while(i > 0){
+        while (i > 0) {
             int p = parent(i);
             // if the current node's key >= parent node's key, the heap property is satisfied, stop
-            if(this.data.get(i).getKey().compareTo(this.data.get(p).getKey()) >= 0){
+            if (this.data.get(i).getKey().compareTo(this.data.get(p).getKey()) >= 0) {
                 break;
             }
             // swap two nodes' values
@@ -90,33 +90,37 @@ public class Heap<K extends Comparable<K>, V> {
      * Swaps the node at index i downwards until the heap property is satisfied
      */
     private void downHeap(int i) {
-        while(true){
-            int left = left(i);
-            int right = right(i);
+        int left = left(i);
+        int right = right(i);
+        
+        while (left < this.size) {
             int smaller = i; // Suppose the current node is the smallest
             
-            // if the left child node exists and is smaller than the current node
-            if(left < this.data.size() && 
-               this.data.get(left).getKey().compareTo(this.data.get(smaller).getKey()) < 0){
+            // Compare with left child
+            if (this.data.get(left).getKey().compareTo(this.data.get(smaller).getKey()) < 0) {
                 smaller = left;
             }
             
-            // if the right child node exists and is smaller than the current smallest node
-            if(right < this.data.size() && 
-               this.data.get(right).getKey().compareTo(this.data.get(smaller).getKey()) < 0){
+            // Compare with right child if it exists
+            if (right < this.size
+                    && this.data.get(right).getKey().compareTo(this.data.get(smaller).getKey()) < 0) {
                 smaller = right;
             }
             
-            // if the current node is the smallest, the heap property is satisfied, exit
-            if(smaller == i){
+            // If current node is smallest, we're done
+            if (smaller == i) {
                 break;
             }
-            // swap two nodes' values
+            
+            // Swap and continue downward
             Entry<K, V> temp = this.data.get(i);
             this.data.set(i, this.data.get(smaller));
             this.data.set(smaller, temp);
-            // continue to check the smaller child node's key
+            
+            // Update indices for next iteration
             i = smaller;
+            left = left(i);
+            right = right(i);
         }
     }
 
@@ -165,15 +169,15 @@ public class Heap<K extends Comparable<K>, V> {
      */
     public Entry<K, V> removeMin() {
         // Return null if empty
-        if(this.isEmpty()){
+        if (this.isEmpty()) {
             return null;
         }
         
-        // Save the min element
-        Entry<K, V> min = this.data.get(0);
-        
         // Get the last element
         int last = this.size - 1;
+        
+        // Save the min element
+        Entry<K, V> min = this.data.get(0);
         
         // Move last element to root
         this.data.set(0, this.data.get(last));
@@ -183,12 +187,13 @@ public class Heap<K extends Comparable<K>, V> {
         this.size--;
         
         // Restore heap property (only if heap is not empty now)
-        if(!this.isEmpty()){
+        if (!this.isEmpty()) {
             this.downHeap(0);
         }
         
         return min; 
     }
+
     /**
      * We assume smaller keys have higher priority, so this method will
      * return a copy of the highest priority element in the heap, but it
@@ -198,11 +203,12 @@ public class Heap<K extends Comparable<K>, V> {
      * Note: Return null if empty
      */
     public Entry<K, V> peekMin() {
-        if(this.isEmpty()){
+        if (this.isEmpty()) {
             return null;
         }
         // Return a copy, not the original reference
-      return this.data.get(0);
+        Entry<K, V> original = this.data.get(0);
+        return new Entry<>(original.getKey(), original.getValue());
     }
 
     /**
@@ -228,3 +234,4 @@ public class Heap<K extends Comparable<K>, V> {
     }
 
 }
+
