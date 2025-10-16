@@ -93,22 +93,21 @@ public class Heap<K extends Comparable<K>, V> {
         int left = left(i);
         int right = right(i);
         
-        while (left < this.size) {
+        while (right < this.size) {
             int smaller = i; // Suppose the current node is the smallest
             
             // Compare with left child
-            if (this.data.get(left).getKey().compareTo(this.data.get(smaller).getKey()) < 0) {
-                smaller = left;
+            if(left < this.data.size() && right < this.data.size()) {
+                if(this.data.get(left).getKey().compareTo(this.data.get(right).getKey()) < 0) {
+                    smaller = left;
+                } else {
+                    smaller = right;
+                }
             }
             
             // Compare with right child if it exists
-            if (right < this.size
-                    && this.data.get(right).getKey().compareTo(this.data.get(smaller).getKey()) < 0) {
-                smaller = right;
-            }
-            
-            // If current node is smallest, we're done
-            if (smaller == i) {
+            if(this.data.get(i).getKey().compareTo(this.data.get(smallestIndex).getKey()) <= 0) {
+                // 当前节点已经小于等于子节点，heap property 满足
                 break;
             }
             
