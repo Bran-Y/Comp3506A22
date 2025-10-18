@@ -91,10 +91,10 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
         //线性探测
         int originalIndex = index;
         while (currentSlot != null) {
-            if (currentSlot.key.equals(key)) {
+            if (currentSlot.getKey().equals(key)) {
                 // 找到了，替换
-                returnValue = currentSlot.value;
-                this.data[index] = new Entry<>(key, value);
+                returnValue = currentSlot.getValue();
+                this.data[index].setValue(value);
                 return returnValue;
             }
             //如果当前位置不为空，则继续探测下一个位置
@@ -137,7 +137,7 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
         Entry<K,V>[] newData = (Entry<K,V>[]) new Entry[this.capacity];
         for (Entry<K,V> element : this.data) {
             if (element != null) {
-                int newIndex = bucket_index(element.key);
+                int newIndex = bucket_index(element.getKey());
                 while(newData[newIndex] != null) {
                     newIndex = (newIndex + 1) % this.capacity;
                 }
@@ -161,8 +161,8 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
         //获取当前entry
         Entry<K,V> slot = this.data[index];
         while (slot != null) {
-            if (slot.key.equals(key)) {
-                return slot.value;
+            if (slot.getKey().equals(key)) {
+                return slot.getValue();
             }
             index = (index + 1) % this.capacity;
             slot = this.data[index];
@@ -191,7 +191,7 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
         int index = bucket_index(key);
         int originalIndex = index;
         while (this.data[index] != null) {
-            if (this.data[index].key.equals(key)) {
+            if (this.data[index].getKey().equals(key)) {
                 this.data[index] = null;
                 this.size--;
                 rehash(index);
@@ -215,7 +215,7 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
             index = (index + 1) % this.capacity;
         }
         for (Entry<K,V> entry : toReinsert) {
-            put(entry.key, entry.value);
+            put(entry.getKey(), entry.getValue());
         }
     }
 }
