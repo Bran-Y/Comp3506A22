@@ -4,6 +4,41 @@ Student ID:
 
 Statement
 ---------
+1.UnorderedMap.java 中put函数中向Claude询问处理冲突的方法，Claude提供了线性探测的方法。
+# 实现线性探测：
+while (currentSlot != null) {
+    if (currentSlot.key.equals(key)) {
+        // 找到了，替换
+    }
+    index = (index + 1) % this.capacity;  // 移到下一个位置
+    currentSlot = this.data[index];
+}
+2.claude 推荐多项式滚动哈希的方法实现bucketIndex函数
+/**
+ * 多项式滚动哈希
+ * 简单且效果好
+ */
+private int bucketIndex(K key) {
+    if (key == null) {
+        return 0;
+    }
+    
+    String keyString = key.toString();
+    int hash = 0;
+    
+    // 使用31作为乘数
+    for (int i = 0; i < keyString.length(); i++) {
+        hash = 31 * hash + keyString.charAt(i);
+    }
+    
+    // 处理负数：如果是负数就取绝对值
+    if (hash < 0) {
+        hash = -hash;
+    }
+    
+    int index = hash % this.capacity;
+    return index;
+}
 
 Refer to the referencing guide on the LMS for details on what needs to go in
 here. If in doubt, put your references here. Ignorance is NOT an excuse for

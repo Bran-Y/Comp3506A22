@@ -90,36 +90,35 @@ public class Heap<K extends Comparable<K>, V> {
      * Swaps the node at index i downwards until the heap property is satisfied
      */
     private void downHeap(int i) {
-        int left = left(i);
-        int right = right(i);
-        
-        while (right < this.size) {
-            int smaller = i; // Suppose the current node is the smallest
+        while (true) {
+            int left = left(i);
+            int right = right(i);
+            int smallest = i;
             
-            // Compare with left child
-            if(left < this.data.size() && right < this.data.size()) {
-                if(this.data.get(left).getKey().compareTo(this.data.get(right).getKey()) < 0) {
-                    smaller = left;
-                } else {
-                    smaller = right;
-                }
+            // 检查左子节点
+            if (left < this.size && 
+                this.data.get(left).getKey().compareTo(this.data.get(smallest).getKey()) < 0) {
+                smallest = left;
             }
             
-            // Compare with right child if it exists
-            if(this.data.get(i).getKey().compareTo(this.data.get(smaller).getKey()) <= 0) {
-                // current node is already less than or equal to the smaller child, heap property is satisfied
+            // 检查右子节点
+            if (right < this.size && 
+                this.data.get(right).getKey().compareTo(this.data.get(smallest).getKey()) < 0) {
+                smallest = right;
+            }
+            
+            // 如果当前节点已经是最小的，停止
+            if (smallest == i) {
                 break;
             }
             
-            // Swap and continue downward
+            // 交换
             Entry<K, V> temp = this.data.get(i);
-            this.data.set(i, this.data.get(smaller));
-            this.data.set(smaller, temp);
+            this.data.set(i, this.data.get(smallest));
+            this.data.set(smallest, temp);
             
-            // Update indices for next iteration
-            i = smaller;
-            left = left(i);
-            right = right(i);
+            // 继续向下
+            i = smallest;
         }
     }
 
