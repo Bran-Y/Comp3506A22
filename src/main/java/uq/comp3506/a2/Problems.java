@@ -8,7 +8,7 @@ import uq.comp3506.a2.structures.Vertex;
 import uq.comp3506.a2.structures.Entry;
 import uq.comp3506.a2.structures.TopologyType;
 import uq.comp3506.a2.structures.Tunnel;
-
+import uq.comp3506.a2.structures.UnorderedMap;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -96,9 +96,117 @@ public class Problems {
      * vertices.
      */
     public static <S, U> TopologyType topologyDetection(List<Edge<S, U>> edgeList) {
-        TopologyType dummy = TopologyType.UNKNOWN;
-        return dummy;
+        // TopologyType dummy = TopologyType.UNKNOWN;
+        // return dummy;
+        if (edgeList == null || edgeList.size() == 0) {
+            return TopologyType.UNKNOWN;
+        }
+        //build an unordered map to store the vertices ->[v1,v2..]
+        UnorderedMap<Integer, ArrayList<Integer>> graph = new UnorderedMap<>();
+        ArrayList<Integer> vertices = new ArrayList<>();
+        for (Edge<S, U> edge : edgeList) {
+            int v1 = edge.getVertex1().getId();
+            int v2 = edge.getVertex2().getId();
+            if (graph.get(v1) == null) {
+                graph.put(v1, new ArrayList<>());
+            }
+            if (graph.get(v2) == null) {
+                graph.put(v2, new ArrayList<>());
+            }
+            graph.get(v1).add(v2);
+            graph.get(v2).add(v1);
+            if (!vertices.contains(v1)) {
+                vertices.add(v1);
+            }
+            if (!vertices.contains(v2)) {
+                vertices.add(v2);
+            }
+        }
+        
+        int V = vertices.size(); // vertex number
+        int E = edgeList.size(); // edge number
+        
+        // 步骤2：使用visited集合（不是数组！）检测连通分量
+        UnorderedMap<Integer, Boolean> visited = new UnorderedMap<>();
+        for (Integer v : vertices) {
+            visited.put(v, false);
+        }
+        
+        int componentCount = 0;
+        ArrayList<ArrayList<Integer>> components = new ArrayList<>();
+        
+        for (Integer vertex : vertices) {
+            if (!visited.get(vertex)) {
+                ArrayList<Integer> component = new ArrayList<>();
+                dfs(vertex, graph, visited, component);
+                components.add(component);
+                componentCount++;
+            }
+        }
+        
+        // 步骤3：判断每个连通分量的类型
+        boolean hasCycle = false;
+        boolean hasTree = false;
+        
+        for (ArrayList<Integer> component : components) {
+            int componentVertices = component.size();
+            int componentEdges = 0;
+            
+            // 计算该连通分量的边数
+            for (Integer vertex : component) {
+                componentEdges += graph.get(vertex).size();
+            }
+            componentEdges /= 2;  // 每条边被计算了两次
+            
+            // 判断是否有环
+            if (componentEdges >= componentVertices) {
+                hasCycle = true;
+            } else if (componentEdges == componentVertices - 1) {
+                hasTree = true;
+            }
+        }
+        
+        // 步骤4：根据连通分量数量和类型确定拓扑类型
+        if (componentCount == 1) {
+            // 只有一个连通分量
+            if (E == V - 1) {
+                return TopologyType.CONNECTED_TREE;
+            } else {
+                return TopologyType.CONNECTED_GRAPH;
+            }
+        } else {
+            // 多个连通分量
+            if (hasCycle && hasTree) {
+                return TopologyType.DISCONNECTED_HYBRID;
+            } else if (hasTree) {
+                return TopologyType.DISCONNECTED_TREE;
+            } else {
+                // 所有组件都有环（这种情况理论上也属于某种类型，但根据题目定义）
+                return TopologyType.DISCONNECTED_HYBRID;
+            }
+        }
+}
+
+/**
+ * 深度优先搜索
+ */
+    private static void dfs(Integer vertex, 
+                       UnorderedMap<Integer, ArrayList<Integer>> graph,
+                       UnorderedMap<Integer, Boolean> visited,
+                       ArrayList<Integer> component) {
+    visited.put(vertex, true);
+    component.add(vertex);
+    
+    ArrayList<Integer> neighbors = graph.get(vertex);
+    if (neighbors != null) {
+        for (Integer neighbor : neighbors) {
+            Boolean isVisited = visited.get(neighbor);
+            if (isVisited == null || !isVisited) {
+                dfs(neighbor, graph, visited, component);
+            }
+        }
     }
+}
  
     /**
      * Compute the list of reachable destinations and their minimum costs.
