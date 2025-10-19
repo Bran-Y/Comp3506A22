@@ -164,6 +164,14 @@ public class OrderedMap<K extends Comparable<K>, V> implements MapInterface<K, V
      */
     public V nextGeq(K key) {
         // Implement me!
+        ArrayList<K> allKeys = new ArrayList<>();
+        inOrderTraversal(root, allKeys);
+        
+        for (K k : allKeys) {
+            if (k.compareTo(key) >= 0) {
+                return get(k);
+            }
+        }
         return null;
     }
 
@@ -172,17 +180,45 @@ public class OrderedMap<K extends Comparable<K>, V> implements MapInterface<K, V
      */
     public V nextLeq(K key) {
         // Implement me!
+        ArrayList<K> allKeys = new ArrayList<>();
+        inOrderTraversal(root, allKeys);
+        
+        for (int i = allKeys.size() - 1; i >= 0; i--) {
+            K k = allKeys.get(i);
+            if (k.compareTo(key) <= 0) {
+                return get(k);
+            }
+        }
         return null;
     }
 
 
     /** Returns a SORTED list of keys in the range [lo, hi]*/
     public List<K> keysInRange(K lo, K hi) {
-        ArrayList<K> result = new ArrayList<>();
+        ArrayList<K> allKeys = new ArrayList<>();
         // Implement me!
-        return result;
+        inOrderTraversal(root, allKeys);
+        
+        ArrayList<K> keysInRange = new ArrayList<>();
+        for (K key : allKeys) {
+            if (key.compareTo(lo) >= 0 && key.compareTo(hi) <= 0) {
+                keysInRange.add(key);
+            }
+            if (key.compareTo(hi) > 0) {
+                break;
+            }
+        }
+        return keysInRange;
     }
-
+    private void inOrderTraversal(Node<K, V> node, ArrayList<K> keys) {
+        if (node == null) {
+            return;
+        }
+        
+        inOrderTraversal(node.getLeft(), keys);
+        keys.add(node.getKey());
+        inOrderTraversal(node.getRight(), keys);
+    }
     /* All of the AVL Tree helpers are below; they are all private because a
        user of an ordered map doesn't need to know or care about them. */
 
@@ -238,13 +274,27 @@ public class OrderedMap<K extends Comparable<K>, V> implements MapInterface<K, V
         updateHeight(x);
         return x;
     }
-
+    /**
+     * Rotates node x such that y becomes the parent
+     *
+     *     y                x
+     *    / \              / \
+     *   x  T3   <--     T1   y
+     *  / \                  / \
+     * T1 T2                T2 T3
+     */
     /** The mirror of the rotateRight shown above */
     private Node<K, V> rotateLeft(Node<K, V> x) {
         // uh oh... implement me!
         // you can do it without AI, I believe in you
         // make Barry proud
-        return x; // This will NOT work
+        Node<K, V> y = x.getRight();
+        Node<K, V> heavySubtree = y.getLeft();
+        y.setLeft(x);
+        x.setRight(heavySubtree);
+        updateHeight(x);
+        updateHeight(y);
+        return y;
     }
 
     /** Does the heavy lifting of the balancing */
