@@ -223,6 +223,31 @@ private void keysInRangeHelper(Node<K, V> node, K lo, K hi, ArrayList<K> result)
 2. 只访问路径上的节点（树高约10个节点）
 3. 找到答案
 总计：访问10个节点
+4.借助Claude修复routeManagement的算法问题：
+1. visited 检查
+/ ❌ 错误 - 会抛出 NullPointerException
+if (visited.get(currentVertex)) {
+    continue;
+}
+
+// ✅ 正确
+Boolean isVisited = visited.get(currentVertex);
+if (isVisited != null && isVisited) {
+    continue;
+}
+2. oldDistance 检查
+Integer oldDistance = distances.get(toVertexId);
+if (oldDistance == null || newDistance < oldDistance) {
+    distances.put(toVertexId, newDistance);
+    pq.insert(newDistance, toVertexId);
+}
+3. added 检查
+Boolean added1 = added.get(v1);
+if (dist1 != null && (added1 == null || !added1)) {
+    answers.add(new Entry<>(v1, dist1));
+    added.put(v1, true);
+}
+
 Refer to the referencing guide on the LMS for details on what needs to go in
 here. If in doubt, put your references here. Ignorance is NOT an excuse for
 skipping this process.
