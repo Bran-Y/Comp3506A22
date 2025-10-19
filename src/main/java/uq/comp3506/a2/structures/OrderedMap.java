@@ -164,60 +164,75 @@ public class OrderedMap<K extends Comparable<K>, V> implements MapInterface<K, V
      */
     public V nextGeq(K key) {
         // Implement me!
-        ArrayList<K> allKeys = new ArrayList<>();
-        inOrderTraversal(root, allKeys);
-        
-        for (K k : allKeys) {
-            if (k.compareTo(key) >= 0) {
-                return get(k);
-            }
-        }
-        return null;
+        Node<K, V> result = nextGeqHelper(root, key, null);
+        return result == null ? null : result.getValue();
     }
-
+    private Node<K, V> nextGeqHelper(Node<K, V> node, K key, Node<K, V> candidate) {
+        if (node == null) {
+            return candidate;
+        }
+        
+        int cmp = key.compareTo(node.getKey());
+        
+        if (cmp == 0) {
+            return node;
+        } else if (cmp < 0) {
+            return nextGeqHelper(node.getLeft(), key, node);
+        } else {
+            return nextGeqHelper(node.getRight(), key, candidate);
+        }
+    }
     /** Returns the value associated with the largest key less than or
      * equal to `key`
      */
     public V nextLeq(K key) {
         // Implement me!
-        ArrayList<K> allKeys = new ArrayList<>();
-        inOrderTraversal(root, allKeys);
-        
-        for (int i = allKeys.size() - 1; i >= 0; i--) {
-            K k = allKeys.get(i);
-            if (k.compareTo(key) <= 0) {
-                return get(k);
-            }
+        Node<K, V> result = nextLeqHelper(root, key, null);
+        return result == null ? null : result.getValue();
+    }
+    private Node<K, V> nextLeqHelper(Node<K, V> node, K key, Node<K, V> candidate) {
+        if (node == null) {
+            return candidate;
         }
-        return null;
+        
+        int cmp = key.compareTo(node.getKey());
+        
+        if (cmp == 0) {
+            return node;
+        } else if (cmp > 0) {
+            return nextLeqHelper(node.getRight(), key, node);
+        } else {
+            return nextLeqHelper(node.getLeft(), key, candidate);
+        }
     }
 
 
     /** Returns a SORTED list of keys in the range [lo, hi]*/
     public List<K> keysInRange(K lo, K hi) {
-        ArrayList<K> allKeys = new ArrayList<>();
+        ArrayList<K> result = new ArrayList<>();
         // Implement me!
-        inOrderTraversal(root, allKeys);
-        
-        ArrayList<K> keysInRange = new ArrayList<>();
-        for (K key : allKeys) {
-            if (key.compareTo(lo) >= 0 && key.compareTo(hi) <= 0) {
-                keysInRange.add(key);
-            }
-            if (key.compareTo(hi) > 0) {
-                break;
-            }
-        }
-        return keysInRange;
+        keysInRangeHelper(root, lo, hi, result);
+        return result;
     }
-    private void inOrderTraversal(Node<K, V> node, ArrayList<K> keys) {
+    private void keysInRangeHelper(Node<K, V> node, K lo, K hi, ArrayList<K> result) {
         if (node == null) {
             return;
         }
         
-        inOrderTraversal(node.getLeft(), keys);
-        keys.add(node.getKey());
-        inOrderTraversal(node.getRight(), keys);
+        int cmpLo = node.getKey().compareTo(lo);
+        int cmpHi = node.getKey().compareTo(hi);
+        
+        if (cmpLo > 0) {
+            keysInRangeHelper(node.getLeft(), lo, hi, result);
+        }
+        
+        if (cmpLo >= 0 && cmpHi <= 0) {
+            result.add(node.getKey());
+        }
+        
+        if (cmpHi < 0) {
+            keysInRangeHelper(node.getRight(), lo, hi, result);
+        }
     }
     /* All of the AVL Tree helpers are below; they are all private because a
        user of an ordered map doesn't need to know or care about them. */
