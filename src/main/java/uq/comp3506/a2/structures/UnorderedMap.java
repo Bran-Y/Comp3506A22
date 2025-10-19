@@ -21,7 +21,7 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
     private int size = 0;
     private int capacity = 16;
     private static final int INITIAL_CAPACITY = 16;
-    private static final float LOAD_FACTOR = 0.75f; // 降低负载因子减少冲突
+    private static final float LOAD_FACTOR = 0.8f;
 
     /**
      * Constructs an empty UnorderedMap
@@ -30,16 +30,6 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
         // Implement me!
         this.data = (Entry<K, V>[]) new Entry[INITIAL_CAPACITY];
         this.capacity = INITIAL_CAPACITY;
-        this.size = 0;
-    }
-    
-    /**
-     * Constructs an empty UnorderedMap with specified initial capacity
-     * @param initialCapacity the initial capacity (will be adjusted to next power of 2)
-     */
-    public UnorderedMap(int initialCapacity) {
-        this.capacity = nextPowerOfTwo(initialCapacity);
-        this.data = (Entry<K, V>[]) new Entry[this.capacity];
         this.size = 0;
     }
 
@@ -109,7 +99,7 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
                 return returnValue;
             }
             //如果当前位置不为空，则继续探测下一个位置
-            index = (index + 1) & (this.capacity - 1);
+            index = (index + 1) % this.capacity;
             currentSlot = this.data[index];
             //防止循环
             if (index == originalIndex) {
@@ -126,59 +116,38 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
             return 0;
         }
         
-        // 使用Java内置的hashCode方法，效率更高
-        int hash = key.hashCode();
+        String keyString = key.toString();
+        int hash = 0;
         
-        // 使用位运算优化取模操作（当capacity是2的幂时）
-        if (isPowerOfTwo(this.capacity)) {
-            return hash & (this.capacity - 1);
-        } else {
-            // 处理负数：使用位运算确保结果为正
-            return (hash & Integer.MAX_VALUE) % this.capacity;
+        // 使用31作为乘数
+        for (int i = 0; i < keyString.length(); i++) {
+            hash = 31 * hash + keyString.charAt(i);
         }
-    }
-    
-    private boolean isPowerOfTwo(int n) {
-        return n > 0 && (n & (n - 1)) == 0;
+        
+        // 处理负数：如果是负数就取绝对值
+        if (hash < 0) {
+            hash = -hash;
+        }
+        
+        int index = hash % this.capacity;
+        return index;
     }
     
     private void resize() {
-        // 保存旧数据
-        Entry<K, V>[] oldData = this.data;
+        //双倍扩容
         int oldCapacity = this.capacity;
-        
-        // 确保新容量是2的幂，提高位运算效率
-        this.capacity = nextPowerOfTwo(oldCapacity * 2);
-        this.data = (Entry<K, V>[]) new Entry[this.capacity];
-        
-        // 重新插入所有元素
-        for (Entry<K, V> element : oldData) {
+        this.capacity *= 2;
+        Entry<K, V>[] newData = (Entry<K, V>[]) new Entry[this.capacity];
+        for (Entry<K, V> element : this.data) {
             if (element != null) {
-                // 直接使用位运算计算新位置
-                int hash = element.getKey().hashCode();
-                int newIndex = hash & (this.capacity - 1);
-                
-                // 线性探测找到空位
-                while (this.data[newIndex] != null) {
-                    newIndex = (newIndex + 1) & (this.capacity - 1);
+                int newIndex = bucket_index(element.getKey());
+                while (newData[newIndex] != null) {
+                    newIndex = (newIndex + 1) % this.capacity;
                 }
-                this.data[newIndex] = element;
+                newData[newIndex] = element;
             }
         }
-    }
-    
-    private int nextPowerOfTwo(int n) {
-        if (n <= 0) return 1;
-        if (isPowerOfTwo(n)) return n;
-        
-        // 找到大于n的最小2的幂
-        n--;
-        n |= n >> 1;
-        n |= n >> 2;
-        n |= n >> 4;
-        n |= n >> 8;
-        n |= n >> 16;
-        return n + 1;
+        this.data = newData;    
     }
     /**
      * Looks up the specified key in this map, returning its associated value
@@ -198,7 +167,7 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
             if (slot.getKey().equals(key)) {
                 return slot.getValue();
             }
-            index = (index + 1) & (this.capacity - 1);
+            index = (index + 1) % this.capacity;
             slot = this.data[index];
             if (index == originalIndex) {
                 break;
@@ -231,7 +200,7 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
                 rehash(index);
                 return currentValue;
             }
-            index = (index + 1) & (this.capacity - 1);
+            index = (index + 1) % this.capacity;
             if (index == originalIndex) {
                 break;
             }
@@ -240,21 +209,16 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
     }
     
     private void rehash(int removedIndex) {
-        // 使用更高效的rehash策略：直接移动后续元素
-        int index = (removedIndex + 1) & (this.capacity - 1);
-        
+        ArrayList<Entry<K, V>> toReinsert = new ArrayList<>();
+        int index = (removedIndex + 1) % this.capacity;
         while (this.data[index] != null) {
-            Entry<K, V> entry = this.data[index];
-            int idealIndex = bucket_index(entry.getKey());
-            
-            // 如果这个元素应该放在当前位置或之前的位置，则移动它
-            if (idealIndex <= removedIndex || idealIndex > index) {
-                this.data[removedIndex] = entry;
-                this.data[index] = null;
-                removedIndex = index;
-            }
-            
-            index = (index + 1) & (this.capacity - 1);
+            toReinsert.add(this.data[index]);
+            this.data[index] = null;
+            this.size--;
+            index = (index + 1) % this.capacity;
+        }
+        for (Entry<K, V> entry : toReinsert) {
+            put(entry.getKey(), entry.getValue());
         }
     }
 }
