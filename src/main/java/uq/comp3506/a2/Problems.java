@@ -138,7 +138,8 @@ public class Problems {
         int componentCount = 0;
         
         for (Integer vertex : vertices) {
-            if (!visited.get(vertex)) {
+            Boolean isVisited = visited.get(vertex);
+            if (isVisited == null || !isVisited) {
                 ArrayList<Integer> component = new ArrayList<>();
                 dfs(vertex, graph, visited, component);
                 components.add(component);
@@ -156,7 +157,10 @@ public class Problems {
             
             // 计算该连通分量的边数
             for (Integer vertex : component) {
-                componentEdges += graph.get(vertex).size();
+                ArrayList<Integer> neighbors = graph.get(vertex);
+                if (neighbors != null) {
+                    componentEdges += neighbors.size();
+                }
             }
             componentEdges /= 2;  // 每条边被计算了两次（无向图）
             
