@@ -96,11 +96,12 @@ public class Problems {
      * vertices.
      */
     public static <S, U> TopologyType topologyDetection(List<Edge<S, U>> edgeList) {
+        // TopologyType dummy = TopologyType.UNKNOWN;
+        // return dummy;
         if (edgeList == null || edgeList.size() == 0) {
             return TopologyType.UNKNOWN;
         }
-        
-        // Build adjacency list and collect vertices
+        //build an unordered map to store the vertices ->[v1,v2..]
         UnorderedMap<Integer, ArrayList<Integer>> graph = new UnorderedMap<>();
         ArrayList<Integer> vertices = new ArrayList<>();
         
@@ -126,125 +127,115 @@ public class Problems {
             }
         }
         
-        int V = vertices.size(); // number of vertices
-        int E = edgeList.size(); // number of edges
+        int V = vertices.size(); // 顶点数
+        int E = edgeList.size(); // 边数
         
-        // Check connectivity using DFS/BFS
-        boolean isConnected = isGraphConnected(graph, vertices);
+        // 找出所有连通分量
+        ArrayList<Component> components = findComponents(graph, vertices);
         
-        // Check if it's a tree (connected and E = V - 1)
-        boolean isTree = isConnected && (E == V - 1);
-        
-        // Determine topology type
-        if (isConnected) {
-            if (isTree) {
+        // 根据连通分量的数量和性质判断拓扑类型
+        if (components.size() == 1) {
+            // 只有一个连通分量
+            Component comp = components.get(0);
+            if (comp.edgeCount == comp.vertexCount - 1) {
                 return TopologyType.CONNECTED_TREE;
             } else {
                 return TopologyType.CONNECTED_GRAPH;
             }
         } else {
-            // Disconnected graph
-            if (hasTreeComponent(graph, vertices)) {
-                return TopologyType.HYBRID;
-            } else {
-                return TopologyType.FOREST;
-            }
-        }
-    }
-    // Helper method to check if graph is connected
-    private static boolean isGraphConnected(UnorderedMap<Integer, ArrayList<Integer>> graph, 
-                                           ArrayList<Integer> vertices) {
-        if (vertices.size() == 0) {
-            return true;
-        }
-        
-        // Use BFS to traverse from first vertex
-        ArrayList<Boolean> visited = new ArrayList<>();
-        for (int i = 0; i < vertices.size(); i++) {
-            visited.add(false);
-        }
-        
-        // Start BFS from first vertex
-        ArrayList<Integer> queue = new ArrayList<>();
-        queue.add(vertices.get(0));
-        visited.set(0, true);
-        int visitedCount = 1;
-        
-        while (queue.size() > 0) {
-            int current = queue.remove(0);
-            ArrayList<Integer> neighbors = graph.get(current);
+            // 多个连通分量
+            int treeCount = 0;
+            int graphCount = 0;
             
-            if (neighbors != null) {
-                for (int neighbor : neighbors) {
-                    int index = vertices.indexOf(neighbor);
-                    if (index != -1 && !visited.get(index)) {
-                        visited.set(index, true);
-                        queue.add(neighbor);
-                        visitedCount++;
-                    }
+            for (Component comp : components) {
+                if (comp.edgeCount == comp.vertexCount - 1) {
+                    treeCount++;
+                } else {
+                    graphCount++;
                 }
+            }
+            
+            if (treeCount == components.size()) {
+                return TopologyType.FOREST; // 所有分量都是树
+            } else if (graphCount == components.size()) {
+                return TopologyType.DISCONNECTED_GRAPH; // 所有分量都有环
+            } else {
+                return TopologyType.HYBRID; // 混合：有树也有图
+            }
+        }
+    }
+    
+    // 辅助类：存储连通分量信息
+    private static class Component {
+        int vertexCount;
+        int edgeCount;
+        
+        Component(int vertexCount, int edgeCount) {
+            this.vertexCount = vertexCount;
+            this.edgeCount = edgeCount;
+        }
+    }
+    
+    // 找出所有连通分量
+    private static ArrayList<Component> findComponents(
+            UnorderedMap<Integer, ArrayList<Integer>> graph, 
+            ArrayList<Integer> vertices) {
+        
+        ArrayList<Component> components = new ArrayList<>();
+        UnorderedMap<Integer, Boolean> visited = new UnorderedMap<>();
+        
+        // 初始化 visited
+        for (int v : vertices) {
+            visited.put(v, false);
+        }
+        
+        // 对每个未访问的顶点进行 BFS
+        for (int v : vertices) {
+            if (!visited.get(v)) {
+                Component comp = bfsComponent(graph, v, visited);
+                components.add(comp);
             }
         }
         
-        return visitedCount == vertices.size();
+        return components;
     }
     
-    // Helper method to check if disconnected graph has at least one tree component
-    private static boolean hasTreeComponent(UnorderedMap<Integer, ArrayList<Integer>> graph, 
-                                           ArrayList<Integer> vertices) {
-        ArrayList<Boolean> visited = new ArrayList<>();
-        for (int i = 0; i < vertices.size(); i++) {
-            visited.add(false);
-        }
+    // BFS 遍历一个连通分量，返回该分量的信息
+    private static Component bfsComponent(
+            UnorderedMap<Integer, ArrayList<Integer>> graph,
+            int start,
+            UnorderedMap<Integer, Boolean> visited) {
         
-        // Find all connected components
-        for (int i = 0; i < vertices.size(); i++) {
-            if (!visited.get(i)) {
-                // Check if this component is a tree
-                ArrayList<Integer> component = new ArrayList<>();
-                int edgeCount = getComponent(graph, vertices, visited, i, component);
-                
-                // A tree has edges = vertices - 1
-                if (edgeCount == component.size() - 1) {
-                    return true; // Found a tree component
-                }
-            }
-        }
-        
-        return false; // All components have cycles, so it's a disconnected tree (forest)
-    }
-    
-    // Helper method to get a connected component and count its edges
-    private static int getComponent(UnorderedMap<Integer, ArrayList<Integer>> graph,
-                                    ArrayList<Integer> vertices,
-                                    ArrayList<Boolean> visited,
-                                    int startIndex,
-                                    ArrayList<Integer> component) {
         ArrayList<Integer> queue = new ArrayList<>();
-        queue.add(vertices.get(startIndex));
-        visited.set(startIndex, true);
-        component.add(vertices.get(startIndex));
+        queue.add(start);
+        visited.put(start, true);
+        
+        int vertexCount = 0;
         int edgeCount = 0;
         
         while (queue.size() > 0) {
             int current = queue.remove(0);
-            ArrayList<Integer> neighbors = graph.get(current);
+            vertexCount++;
             
+            ArrayList<Integer> neighbors = graph.get(current);
             if (neighbors != null) {
+                // 统计边数（每条边会被两个端点各计一次）
                 edgeCount += neighbors.size();
+                
                 for (int neighbor : neighbors) {
-                    int index = vertices.indexOf(neighbor);
-                    if (index != -1 && !visited.get(index)) {
-                        visited.set(index, true);
+                    Boolean isVisited = visited.get(neighbor);
+                    if (isVisited != null && !isVisited) {
+                        visited.put(neighbor, true);
                         queue.add(neighbor);
-                        component.add(neighbor);
                     }
                 }
             }
         }
         
-        // Each edge is counted twice (once from each endpoint)
-        return edgeCount / 2;
+        // 每条边被计数两次，所以除以2
+        edgeCount = edgeCount / 2;
+        
+        return new Component(vertexCount, edgeCount);
     }
     
  
