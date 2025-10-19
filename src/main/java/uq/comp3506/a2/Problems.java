@@ -177,15 +177,14 @@ public class Problems {
         } else {
             // 多个连通分量
             if (hasCycle && hasTree) {
-                return TopologyType.DISCONNECTED_HYBRID;
-            } else if (hasTree) {
-                return TopologyType.DISCONNECTED_TREE;
+                return TopologyType.HYBRID;
+            } else if (hasCycle) {
+                return TopologyType.DISCONNECTED_GRAPH;
             } else {
-                // 所有组件都有环（这种情况理论上也属于某种类型，但根据题目定义）
-                return TopologyType.DISCONNECTED_HYBRID;
+                return TopologyType.FOREST;
             }
         }
-}
+    }
 
 /**
  * 深度优先搜索
@@ -198,15 +197,15 @@ public class Problems {
     component.add(vertex);
     
     ArrayList<Integer> neighbors = graph.get(vertex);
-    if (neighbors != null) {
+        if (neighbors != null) {
         for (Integer neighbor : neighbors) {
             Boolean isVisited = visited.get(neighbor);
-            if (isVisited == null || !isVisited) {
-                dfs(neighbor, graph, visited, component);
+                if (isVisited == null || !isVisited) {
+                    dfs(neighbor, graph, visited, component);
+                }
             }
         }
     }
-}
  
     /**
      * Compute the list of reachable destinations and their minimum costs.
