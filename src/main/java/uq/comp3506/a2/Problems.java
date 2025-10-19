@@ -39,11 +39,11 @@ public class Problems {
         if (tunnelLength <= 0) {
             return -1.0;
         }
-        if (lightIntervals = null || lightIntervals.size() == 0) {
+        if (lightIntervals == null || lightIntervals.size() == 0) {
             return -1.0;
         }
         //sort
-        ArrayList<Integer> sorted = new ArrayList<>();
+        ArrayList<Integer> sorted = new ArrayList<>(lightIntervals);
         sorted.sort(null);
         //binary search
         double left = 0.0;
@@ -67,7 +67,7 @@ public class Problems {
         double coveredUpTo = 0.0;
         int lightIndex = 0;
         while (coveredUpTo < tunnelLength) {
-            double maxReach = coveredUpTO;
+            double maxReach = coveredUpTo;
             while (lightIndex < sorted.size()) {
                 int lightPosition = sorted.get(lightIndex);
                 if (lightPosition - radius <= coveredUpTo) {
