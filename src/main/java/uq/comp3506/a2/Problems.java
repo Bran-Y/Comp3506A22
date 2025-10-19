@@ -198,9 +198,10 @@ public class Problems {
         pq.insert(0, origin.getId());
         while (!pq.isEmpty()) {
             Entry<Integer, Integer> currentNode = pq.removeMin();
-            int currentVertex = currentNode.getKey();
-            int currentDistance = currentNode.getValue();
-            if (visited.get(currentVertex)) {
+            int currentVertex = currentNode.getValue();
+            int currentDistance = currentNode.getKey();
+            Boolean isVisited = visited.get(currentVertex);
+            if (isVisited != null && isVisited) {
                 continue;
             }
             visited.put(currentVertex, true);
@@ -215,9 +216,9 @@ public class Problems {
                     int time = currentDistance + neighbor.time;
                     if (time <= threshold) {
                         Integer oldDistance = distances.get(toVertexId);
-                        if(time < oldDistance) {
-                            distances.put(toVertexId, time);
-                            pq.insert(time, toVertexId);
+                        if(oldDistance == null || newDistance < oldDistance) {
+                            distances.put(toVertexId, newDistance);
+                            pq.insert(newDistance, toVertexId);
                         }
                     }
                 }
@@ -227,12 +228,16 @@ public class Problems {
         for (Edge<S,U> edge : edgeList) {
             int v1 = edge.getVertex1().getId();
             int v2 = edge.getVertex2().getId();
-            if (distances.get(v1) != null && added.get(v1) == null) {
-                answers.add(new Entry<Integer, Integer>(v1, distances.get(v1)));
+            Integer distance1 = distances.get(v1);
+            Integer added1 = added.get(v1);
+            if (distance1 != null && (added1 == null || !added1)) {
+                answers.add(new Entry<>(v1, distance1));
                 added.put(v1, true);
             }
-            if (distances.get(v2) != null && added.get(v2) == null) {
-                answers.add(new Entry<Integer, Integer>(v2, distances.get(v2)));
+            Integer distance2 = distances.get(v2);
+            Boolean added2 = added.get(v2);
+            if (distance2 != null && (added2 == null || !added2)) {
+                answers.add(new Entry<>(v2, distance2));
                 added.put(v2, true);
             }
         }
