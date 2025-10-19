@@ -145,9 +145,9 @@ public class Problems {
         } else {
             // Disconnected graph
             if (hasTreeComponent(graph, vertices)) {
-                return TopologyType.DISCONNECTED_HYBRID;
+                return TopologyType.HYBRID;
             } else {
-                return TopologyType.DISCONNECTED_TREE;
+                return TopologyType.FOREST;
             }
         }
     }
