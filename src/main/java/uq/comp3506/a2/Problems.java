@@ -96,25 +96,28 @@ public class Problems {
      * vertices.
      */
     public static <S, U> TopologyType topologyDetection(List<Edge<S, U>> edgeList) {
-        // TopologyType dummy = TopologyType.UNKNOWN;
-        // return dummy;
         if (edgeList == null || edgeList.size() == 0) {
             return TopologyType.UNKNOWN;
         }
-        //build an unordered map to store the vertices ->[v1,v2..]
+        
+        // Build adjacency list and collect vertices
         UnorderedMap<Integer, ArrayList<Integer>> graph = new UnorderedMap<>();
         ArrayList<Integer> vertices = new ArrayList<>();
+        
         for (Edge<S, U> edge : edgeList) {
             int v1 = edge.getVertex1().getId();
             int v2 = edge.getVertex2().getId();
+            
             if (graph.get(v1) == null) {
                 graph.put(v1, new ArrayList<>());
             }
             if (graph.get(v2) == null) {
                 graph.put(v2, new ArrayList<>());
             }
+            
             graph.get(v1).add(v2);
             graph.get(v2).add(v1);
+            
             if (!vertices.contains(v1)) {
                 vertices.add(v1);
             }
@@ -122,13 +125,126 @@ public class Problems {
                 vertices.add(v2);
             }
         }
-        //判断是否连续：遍历graph(id) id->[v1,v2..]
-        //判断是否存在某个id相连点的数量和其他的id不一样
-        //如果存在，说明是不连续，否则连续
-        //if edgeList.size() == vertices.size()-1 ->树
-        //if edgeList.size() > vertices.size() -1 ->cycle
-        int V = vertices.size();//vertex number
-        int E = edgeList.size();//edge number
+        
+        int V = vertices.size(); // number of vertices
+        int E = edgeList.size(); // number of edges
+        
+        // Check connectivity using DFS/BFS
+        boolean isConnected = isGraphConnected(graph, vertices);
+        
+        // Check if it's a tree (connected and E = V - 1)
+        boolean isTree = isConnected && (E == V - 1);
+        
+        // Determine topology type
+        if (isConnected) {
+            if (isTree) {
+                return TopologyType.CONNECTED_TREE;
+            } else {
+                return TopologyType.CONNECTED_GRAPH;
+            }
+        } else {
+            // Disconnected graph
+            if (hasTreeComponent(graph, vertices)) {
+                return TopologyType.DISCONNECTED_HYBRID;
+            } else {
+                return TopologyType.DISCONNECTED_TREE;
+            }
+        }
+    }
+    // Helper method to check if graph is connected
+    private static boolean isGraphConnected(UnorderedMap<Integer, ArrayList<Integer>> graph, 
+                                           ArrayList<Integer> vertices) {
+        if (vertices.size() == 0) {
+            return true;
+        }
+        
+        // Use BFS to traverse from first vertex
+        ArrayList<Boolean> visited = new ArrayList<>();
+        for (int i = 0; i < vertices.size(); i++) {
+            visited.add(false);
+        }
+        
+        // Start BFS from first vertex
+        ArrayList<Integer> queue = new ArrayList<>();
+        queue.add(vertices.get(0));
+        visited.set(0, true);
+        int visitedCount = 1;
+        
+        while (queue.size() > 0) {
+            int current = queue.remove(0);
+            ArrayList<Integer> neighbors = graph.get(current);
+            
+            if (neighbors != null) {
+                for (int neighbor : neighbors) {
+                    int index = vertices.indexOf(neighbor);
+                    if (index != -1 && !visited.get(index)) {
+                        visited.set(index, true);
+                        queue.add(neighbor);
+                        visitedCount++;
+                    }
+                }
+            }
+        }
+        
+        return visitedCount == vertices.size();
+    }
+    
+    // Helper method to check if disconnected graph has at least one tree component
+    private static boolean hasTreeComponent(UnorderedMap<Integer, ArrayList<Integer>> graph, 
+                                           ArrayList<Integer> vertices) {
+        ArrayList<Boolean> visited = new ArrayList<>();
+        for (int i = 0; i < vertices.size(); i++) {
+            visited.add(false);
+        }
+        
+        // Find all connected components
+        for (int i = 0; i < vertices.size(); i++) {
+            if (!visited.get(i)) {
+                // Check if this component is a tree
+                ArrayList<Integer> component = new ArrayList<>();
+                int edgeCount = getComponent(graph, vertices, visited, i, component);
+                
+                // A tree has edges = vertices - 1
+                if (edgeCount == component.size() - 1) {
+                    return true; // Found a tree component
+                }
+            }
+        }
+        
+        return false; // All components have cycles, so it's a disconnected tree (forest)
+    }
+    
+    // Helper method to get a connected component and count its edges
+    private static int getComponent(UnorderedMap<Integer, ArrayList<Integer>> graph,
+                                    ArrayList<Integer> vertices,
+                                    ArrayList<Boolean> visited,
+                                    int startIndex,
+                                    ArrayList<Integer> component) {
+        ArrayList<Integer> queue = new ArrayList<>();
+        queue.add(vertices.get(startIndex));
+        visited.set(startIndex, true);
+        component.add(vertices.get(startIndex));
+        int edgeCount = 0;
+        
+        while (queue.size() > 0) {
+            int current = queue.remove(0);
+            ArrayList<Integer> neighbors = graph.get(current);
+            
+            if (neighbors != null) {
+                edgeCount += neighbors.size();
+                for (int neighbor : neighbors) {
+                    int index = vertices.indexOf(neighbor);
+                    if (index != -1 && !visited.get(index)) {
+                        visited.set(index, true);
+                        queue.add(neighbor);
+                        component.add(neighbor);
+                    }
+                }
+            }
+        }
+        
+        // Each edge is counted twice (once from each endpoint)
+        return edgeCount / 2;
     }
     
  
