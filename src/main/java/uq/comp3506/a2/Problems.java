@@ -36,7 +36,54 @@ public class Problems {
      * Note: We promise that the input List will be an ArrayList.
      */
     public static double tunnelLighting(int tunnelLength, List<Integer> lightIntervals) {
-        return -1;
+        if (tunnelLength <= 0) {
+            return -1.0;
+        }
+        if (lightIntervals = null || lightIntervals.size() == 0) {
+            return -1.0;
+        }
+        //sort
+        ArrayList<Integer> sorted = new ArrayList<>();
+        sorted.sort(null);
+        //binary search
+        double left = 0.0;
+        double right = (double) tunnelLength;
+        double delta = 0.000001;
+        while (right - left > delta) {
+            //mid overflow(要避免大数溢出)
+            double mid = (left + right) / 2.0;
+            //if mid satisfies the condition, update to right
+            //if mid dees not
+            //left = mid
+            if (satisfiesCondition(sorted, mid, tunnelLength)) {
+                right = mid;
+            } else {
+                left = mid;
+            }
+        } 
+        return right;
+    }
+    private static boolean satisfiesCondition(ArrayList<Integer> sorted, double radius, int tunnelLength) {
+        double coveredUpTo = 0.0;
+        int lightIndex = 0;
+        while (coveredUpTo < tunnelLength) {
+            double maxReach = coveredUpTO;
+            while (lightIndex < sorted.size()) {
+                int lightPosition = sorted.get(lightIndex);
+                if (lightPosition - radius <= coveredUpTo) {
+                    maxReach = Math.max(maxReach, lightPosition + radius);
+                    lightIndex++;
+                } else {
+                    break;
+                }
+            }
+            if (maxReach != coveredUpTo) {
+                coveredUpTo = maxReach;
+            } else {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
