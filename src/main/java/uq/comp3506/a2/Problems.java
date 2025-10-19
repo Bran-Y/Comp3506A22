@@ -122,18 +122,20 @@ public class Problems {
                 vertices.add(v2);
             }
         }
-        
-        int V = vertices.size(); // vertex number
-        int E = edgeList.size(); // edge number
-        
-        // 步骤2：使用visited集合（不是数组！）检测连通分量
-        UnorderedMap<Integer, Boolean> visited = new UnorderedMap<>();
-        for (Integer v : vertices) {
-            visited.put(v, false);
+        //判断是否连续：遍历graph(id) id->[v1,v2..]
+        //判断是否存在某个id相连点的数量和其他的id不一样
+        //如果存在，说明是不连续，否则连续
+        //if edgeList.size() == vertices.size()-1 ->树
+        //if edgeList.size() > vertices.size() -1 ->cycle
+        int V = vertices.size();//vertex number
+        int E = edgeList.size();//edge number
+        //用dfs找到连通分量
+        UnorderedMap<Integer,Boolean> visited = new UnorderedMap<>();
+        for (Integer vertex : vertices) {
+            visited.put(vertex, false);
         }
-        
-        int componentCount = 0;
         ArrayList<ArrayList<Integer>> components = new ArrayList<>();
+        int componentCount = 0;
         
         for (Integer vertex : vertices) {
             if (!visited.get(vertex)) {
@@ -144,9 +146,9 @@ public class Problems {
             }
         }
         
-        // 步骤3：判断每个连通分量的类型
-        boolean hasCycle = false;
-        boolean hasTree = false;
+        // 步骤3：判断每个连通分量是树还是图
+        boolean hasTree = false;   // 是否有树组件
+        boolean hasGraph = false;  // 是否有图组件（有环）
         
         for (ArrayList<Integer> component : components) {
             int componentVertices = component.size();
@@ -156,50 +158,60 @@ public class Problems {
             for (Integer vertex : component) {
                 componentEdges += graph.get(vertex).size();
             }
-            componentEdges /= 2;  // 每条边被计算了两次
+            componentEdges /= 2;  // 每条边被计算了两次（无向图）
             
             // 判断是否有环
-            if (componentEdges >= componentVertices) {
-                hasCycle = true;
-            } else if (componentEdges == componentVertices - 1) {
+            // 树：边数 = 顶点数 - 1
+            // 图（有环）：边数 >= 顶点数
+            if (componentEdges == componentVertices - 1) {
                 hasTree = true;
+            } else if (componentEdges >= componentVertices) {
+                hasGraph = true;
             }
         }
         
-        // 步骤4：根据连通分量数量和类型确定拓扑类型
+        // 步骤4：根据连通性和组件类型返回结果
         if (componentCount == 1) {
-            // 只有一个连通分量
+            // 只有一个连通分量 → 连通图
             if (E == V - 1) {
                 return TopologyType.CONNECTED_TREE;
             } else {
                 return TopologyType.CONNECTED_GRAPH;
             }
         } else {
-            // 多个连通分量
-            if (hasCycle && hasTree) {
+            // 多个连通分量 → 非连通图
+            if (hasTree && hasGraph) {
                 return TopologyType.HYBRID;
-            } else if (hasCycle) {
-                return TopologyType.DISCONNECTED_GRAPH;
-            } else {
+            } else if (hasTree) {
                 return TopologyType.FOREST;
+            } else {
+                // 所有组件都有环
+                return TopologyType.DISCONNECTED_GRAPH;
             }
         }
     }
-
-/**
- * 深度优先搜索
- */
-    private static void dfs(Integer vertex, 
-                       UnorderedMap<Integer, ArrayList<Integer>> graph,
-                       UnorderedMap<Integer, Boolean> visited,
-                       ArrayList<Integer> component) {
-    visited.put(vertex, true);
-    component.add(vertex);
     
-    ArrayList<Integer> neighbors = graph.get(vertex);
+    /**
+     * 深度优先搜索（DFS）
+     * @param vertex 当前访问的顶点
+     * @param graph 邻接表
+     * @param visited 访问标记
+     * @param component 当前连通分量
+     */
+    private static void dfs(Integer vertex,
+                           UnorderedMap<Integer, ArrayList<Integer>> graph,
+                           UnorderedMap<Integer, Boolean> visited,
+                           ArrayList<Integer> component) {
+        // 标记为已访问
+        visited.put(vertex, true);
+        // 添加到当前连通分量
+        component.add(vertex);
+        
+        // 访问所有邻居
+        ArrayList<Integer> neighbors = graph.get(vertex);
         if (neighbors != null) {
-        for (Integer neighbor : neighbors) {
-            Boolean isVisited = visited.get(neighbor);
+            for (Integer neighbor : neighbors) {
+                Boolean isVisited = visited.get(neighbor);
                 if (isVisited == null || !isVisited) {
                     dfs(neighbor, graph, visited, component);
                 }
