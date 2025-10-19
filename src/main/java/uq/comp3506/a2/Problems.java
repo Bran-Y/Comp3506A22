@@ -128,64 +128,17 @@ public class Problems {
             }
         }
         
-        // 检查连通性：使用DFS遍历
-        boolean isConnected = true;
-        if (vertices.size() > 0) {
-            UnorderedMap<Integer, Boolean> visited = new UnorderedMap<>();
-            dfs(graph, vertices.get(0), visited);
-            isConnected = (visited.size() == vertices.size());
-        }
-        
-        // 根据边数和顶点数关系判断
+        // 最简单的判断：只根据边数和顶点数关系
         int numVertices = vertices.size();
         int numEdges = edgeList.size();
         
-        if (isConnected) {
-            // 连通的情况
-            if (numEdges == numVertices - 1) {
-                return TopologyType.CONNECTED_TREE;  // 树
-            } else if (numEdges > numVertices - 1) {
-                return TopologyType.CONNECTED_GRAPH;  // 有环的连通图
-            }
+        if (numEdges == numVertices - 1) {
+            return TopologyType.CONNECTED_TREE;  // 树
+        } else if (numEdges > numVertices - 1) {
+            return TopologyType.CONNECTED_GRAPH;  // 有环的图
         } else {
-            // 不连通的情况
-            // 计算连通分量数
-            int components = countComponents(graph, vertices);
-            
-            if (numEdges == numVertices - components) {
-                return TopologyType.FOREST;  // 森林（多个树）
-            } else if (numEdges > numVertices - components) {
-                return TopologyType.DISCONNECTED_GRAPH;  // 不连通的图
-            }
+            return TopologyType.HYBRID;  // 其他情况
         }
-        
-        return TopologyType.UNKNOWN;
-    }
-    
-    private static void dfs(UnorderedMap<Integer, ArrayList<Integer>> graph, int vertex, UnorderedMap<Integer, Boolean> visited) {
-        visited.put(vertex, true);
-        ArrayList<Integer> neighbors = graph.get(vertex);
-        if (neighbors != null) {
-            for (int neighbor : neighbors) {
-                if (visited.get(neighbor) == null) {
-                    dfs(graph, neighbor, visited);
-                }
-            }
-        }
-    }
-    
-    private static int countComponents(UnorderedMap<Integer, ArrayList<Integer>> graph, ArrayList<Integer> vertices) {
-        UnorderedMap<Integer, Boolean> visited = new UnorderedMap<>();
-        int components = 0;
-        
-        for (int vertex : vertices) {
-            if (visited.get(vertex) == null) {
-                dfs(graph, vertex, visited);
-                components++;
-            }
-        }
-        
-        return components;
     }
 
     private static class WeightedEdge {
@@ -214,35 +167,75 @@ public class Problems {
     public static <S, U> List<Entry<Integer, Integer>> routeManagement(List<Edge<S, U>> edgeList,
                                                           Vertex<S> origin, int threshold) {
         ArrayList<Entry<Integer, Integer>> answers = new ArrayList<>();
-        // if (edgeList == null || edgeList.size() == 0) {
-        //     return new ArrayList<>();
-        // }
-        // if (origin == null) {
-        //     return new ArrayList<>();
-        // }
-        // //build an unordered map to store the vertices ->[v1,v2..]
-        // UnorderedMap<Integer, ArrayList<WeightedEdge>> graph = new UnorderedMap<>();
-        // for (Edge<S, U> edge : edgeList) {
-        //     int v1 = edge.getVertex1().getId();
-        //     int v2 = edge.getVertex2().getId();
-        //     int weight = 0;
-        //     if (edge.getData() != null && edge.getData() instanceof Integer) {
-        //         weight = (int) edge.getData();
-        //     }
-        //     if (graph.get(v1) == null) {
-        //         graph.put(v1, new ArrayList<>());
-        //     }
-        //     if (graph.get(v2) == null) {
-        //         graph.put(v2, new ArrayList<>());
-        //     }
-        //     graph.get(v1).add(new WeightedEdge(v2, weight));
-        //     graph.get(v2).add(new WeightedEdge(v1, weight));
-        // }
-        // Heap<Integer, Integer> pq = new Heap<>();
-        // UnorderedMap<Integer, Boolean> visited = new UnorderedMap<>();
-        // UnorderedMap<Integer, Integer> distances = new UnorderedMap<>();
-        // distances.put(origin.getId(), 0);
-
+        if (edgeList == null || edgeList.size() == 0) {
+            return new ArrayList<>();
+        }
+        if (origin == null) {
+            return new ArrayList<>();
+        }
+        //build an unordered map to store the vertices ->[v1,v2..]
+        UnorderedMap<Integer, ArrayList<WeightedEdge>> graph = new UnorderedMap<>();
+        for (Edge<S, U> edge : edgeList) {
+            int v1 = edge.getVertex1().getId();
+            int v2 = edge.getVertex2().getId();
+            int weight = 0;
+            if (edge.getData() != null && edge.getData() instanceof Integer) {
+                weight = (int) edge.getData();
+            }
+            if (graph.get(v1) == null) {
+                graph.put(v1, new ArrayList<>());
+            }
+            if (graph.get(v2) == null) {
+                graph.put(v2, new ArrayList<>());
+            }
+            graph.get(v1).add(new WeightedEdge(v2, weight));
+            graph.get(v2).add(new WeightedEdge(v1, weight));
+        }
+        Heap<Integer, Integer> pq = new Heap<>();
+        UnorderedMap<Integer, Boolean> visited = new UnorderedMap<>();
+        UnorderedMap<Integer, Integer> distances = new UnorderedMap<>();
+        distances.put(origin.getId(), 0);
+        pq.insert(0, origin.getId());
+        while (!pq.isEmpty()) {
+            Entry<Integer, Integer> currentNode = pq.removeMin();
+            int currentVertex = currentNode.getKey();
+            int currentDistance = currentNode.getValue();
+            if (visited.get(currentVertex)) {
+                continue;
+            }
+            visited.put(currentVertex, true);
+            //skip if > threshold
+            if (currentDistance > threshold) {
+                continue;
+            }
+            ArrayList<WeightedEdge> neighbors = graph.get(currentVertex);
+            if (neighbors != null && neighbors.size() > 0) {
+                for (WeightedEdge neighbor : neighbors) {
+                    int toVertexId = neighbor.toVertexId;
+                    int time = currentDistance + neighbor.time;
+                    if (time <= threshold) {
+                        Integer oldDistance = distances.get(toVertexId);
+                        if(time < oldDistance) {
+                            distances.put(toVertexId, time);
+                            pq.insert(time, toVertexId);
+                        }
+                    }
+                }
+            }
+        }
+        UnorderedMap<Integer, Boolean> added = new UnorderedMap<>();
+        for (Edge<S,U> edge : edgeList) {
+            int v1 = edge.getVertex1().getId();
+            int v2 = edge.getVertex2().getId();
+            if (distances.get(v1) != null && added.get(v1) == null) {
+                answers.add(new Entry<Integer, Integer>(v1, distances.get(v1)));
+                added.put(v1, true);
+            }
+            if (distances.get(v2) != null && added.get(v2) == null) {
+                answers.add(new Entry<Integer, Integer>(v2, distances.get(v2)));
+                added.put(v2, true);
+            }
+        }
         return answers;
     }
 
