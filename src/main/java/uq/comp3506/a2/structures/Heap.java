@@ -96,14 +96,14 @@ public class Heap<K extends Comparable<K>, V> {
             int smallest = i;
             
             // 检查左子节点
-            if (left < this.size && 
-                this.data.get(left).getKey().compareTo(this.data.get(smallest).getKey()) < 0) {
+            if (left < this.size 
+                && this.data.get(left).getKey().compareTo(this.data.get(smallest).getKey()) < 0) {
                 smallest = left;
             }
             
             // 检查右子节点
-            if (right < this.size && 
-                this.data.get(right).getKey().compareTo(this.data.get(smallest).getKey()) < 0) {
+            if (right < this.size 
+                && this.data.get(right).getKey().compareTo(this.data.get(smallest).getKey()) < 0) {
                 smallest = right;
             }
             

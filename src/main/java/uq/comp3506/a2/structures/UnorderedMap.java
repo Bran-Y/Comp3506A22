@@ -3,6 +3,7 @@
 package uq.comp3506.a2.structures;
 
 import java.util.ArrayList;
+
 /**
  * Supplied by the COMP3506/7505 teaching team, Semester 2, 2025.
  * <p>
@@ -86,7 +87,7 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
         //计算index
         int index = bucket_index(key);
         //放置元素
-        Entry<K,V> currentSlot = this.data[index];
+        Entry<K, V> currentSlot = this.data[index];
         V returnValue = null;
         //线性探测
         int originalIndex = index;
@@ -109,6 +110,7 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
         this.size++;
         return returnValue;
     }
+    
     private int bucket_index(K key) {
         if (key == null) {
             return 0;
@@ -130,15 +132,16 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
         int index = hash % this.capacity;
         return index;
     }
+    
     private void resize() {
         //双倍扩容
         int oldCapacity = this.capacity;
         this.capacity *= 2;
-        Entry<K,V>[] newData = (Entry<K,V>[]) new Entry[this.capacity];
-        for (Entry<K,V> element : this.data) {
+        Entry<K, V>[] newData = (Entry<K, V>[]) new Entry[this.capacity];
+        for (Entry<K, V> element : this.data) {
             if (element != null) {
                 int newIndex = bucket_index(element.getKey());
-                while(newData[newIndex] != null) {
+                while (newData[newIndex] != null) {
                     newIndex = (newIndex + 1) % this.capacity;
                 }
                 newData[newIndex] = element;
@@ -159,7 +162,7 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
         int index = bucket_index(key);
         int originalIndex = index;
         //获取当前entry
-        Entry<K,V> slot = this.data[index];
+        Entry<K, V> slot = this.data[index];
         while (slot != null) {
             if (slot.getKey().equals(key)) {
                 return slot.getValue();
@@ -214,7 +217,7 @@ public class UnorderedMap<K, V> implements MapInterface<K, V> {
             this.size--;
             index = (index + 1) % this.capacity;
         }
-        for (Entry<K,V> entry : toReinsert) {
+        for (Entry<K, V> entry : toReinsert) {
             put(entry.getKey(), entry.getValue());
         }
     }
