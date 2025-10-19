@@ -216,9 +216,9 @@ public class Problems {
                     int time = currentDistance + neighbor.time;
                     if (time <= threshold) {
                         Integer oldDistance = distances.get(toVertexId);
-                        if(oldDistance == null || newDistance < oldDistance) {
-                            distances.put(toVertexId, newDistance);
-                            pq.insert(newDistance, toVertexId);
+                        if(oldDistance == null || time < oldDistance) {
+                            distances.put(toVertexId, time);
+                            pq.insert(time, toVertexId);
                         }
                     }
                 }
@@ -229,7 +229,7 @@ public class Problems {
             int v1 = edge.getVertex1().getId();
             int v2 = edge.getVertex2().getId();
             Integer distance1 = distances.get(v1);
-            Integer added1 = added.get(v1);
+            Boolean added1 = added.get(v1);
             if (distance1 != null && (added1 == null || !added1)) {
                 answers.add(new Entry<>(v1, distance1));
                 added.put(v1, true);
