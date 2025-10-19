@@ -36,25 +36,24 @@ public class Entry<K, V> {
 
     // You may add more helper functions here, if you wish
     /**
-     * 重写equals方法 - 基于内容比较而不是内存地址
-     * 这是通过测试的关键！
+     * rewrite equals method - compare based on content rather than memory address
      */
     @Override
     public boolean equals(Object obj) {
-        // 如果是同一个对象，直接返回true
+        // if the same object, return true
         if (this == obj) {
             return true;
         }
         
-        // 如果obj是null或者类型不同，返回false
+        // if obj is null or type different, return false
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
         
-        // 类型转换
+        // type conversion
         Entry<?, ?> other = (Entry<?, ?>) obj;
         
-        // 比较key的内容
+        // compare key content
         boolean keyEquals;
         if (this.key == null) {
             keyEquals = (other.key == null);
@@ -62,7 +61,7 @@ public class Entry<K, V> {
             keyEquals = this.key.equals(other.key);
         }
         
-        // 比较value的内容
+        // compare value content
         boolean valueEquals;
         if (this.value == null) {
             valueEquals = (other.value == null);
@@ -70,22 +69,22 @@ public class Entry<K, V> {
             valueEquals = this.value.equals(other.value);
         }
         
-        // 只有key和value都相等时，才返回true
+        // only when key and value are equal, return true
         return keyEquals && valueEquals;
     }
 
     /**
-     * 重写hashCode方法 - 必须与equals方法保持一致
-     * 当equals返回true时，hashCode必须返回相同的值
+     * rewrite hashCode method - must be consistent with equals method
+     * when equals returns true, hashCode must return the same value
      */
     @Override
     public int hashCode() {
-        int result = 17;  // 使用质数作为初始值
+        int result = 17;  
         
-        // 将key的hashCode加入结果
+        // add key's hashCode to result
         result = 31 * result + (key != null ? key.hashCode() : 0);
         
-        // 将value的hashCode加入结果
+        // add value's hashCode to result
         result = 31 * result + (value != null ? value.hashCode() : 0);
         
         return result;

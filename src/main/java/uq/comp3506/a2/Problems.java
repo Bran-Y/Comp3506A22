@@ -9,6 +9,7 @@ import uq.comp3506.a2.structures.Entry;
 import uq.comp3506.a2.structures.TopologyType;
 import uq.comp3506.a2.structures.Tunnel;
 import uq.comp3506.a2.structures.UnorderedMap;
+import uq.comp3506.a2.structures.Heap;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -127,117 +128,74 @@ public class Problems {
             }
         }
         
-        int V = vertices.size(); // 顶点数
-        int E = edgeList.size(); // 边数
+        // 检查连通性：使用DFS遍历
+        boolean isConnected = true;
+        if (vertices.size() > 0) {
+            UnorderedMap<Integer, Boolean> visited = new UnorderedMap<>();
+            dfs(graph, vertices.get(0), visited);
+            isConnected = (visited.size() == vertices.size());
+        }
         
-        // 找出所有连通分量
-        ArrayList<Component> components = findComponents(graph, vertices);
+        // 根据边数和顶点数关系判断
+        int numVertices = vertices.size();
+        int numEdges = edgeList.size();
         
-        // 根据连通分量的数量和性质判断拓扑类型
-        if (components.size() == 1) {
-            // 只有一个连通分量
-            Component comp = components.get(0);
-            if (comp.edgeCount == comp.vertexCount - 1) {
-                return TopologyType.CONNECTED_TREE;
-            } else {
-                return TopologyType.CONNECTED_GRAPH;
+        if (isConnected) {
+            // 连通的情况
+            if (numEdges == numVertices - 1) {
+                return TopologyType.CONNECTED_TREE;  // 树
+            } else if (numEdges > numVertices - 1) {
+                return TopologyType.CONNECTED_GRAPH;  // 有环的连通图
             }
         } else {
-            // 多个连通分量
-            int treeCount = 0;
-            int graphCount = 0;
+            // 不连通的情况
+            // 计算连通分量数
+            int components = countComponents(graph, vertices);
             
-            for (Component comp : components) {
-                if (comp.edgeCount == comp.vertexCount - 1) {
-                    treeCount++;
-                } else {
-                    graphCount++;
+            if (numEdges == numVertices - components) {
+                return TopologyType.FOREST;  // 森林（多个树）
+            } else if (numEdges > numVertices - components) {
+                return TopologyType.DISCONNECTED_GRAPH;  // 不连通的图
+            }
+        }
+        
+        return TopologyType.UNKNOWN;
+    }
+    
+    private static void dfs(UnorderedMap<Integer, ArrayList<Integer>> graph, int vertex, UnorderedMap<Integer, Boolean> visited) {
+        visited.put(vertex, true);
+        ArrayList<Integer> neighbors = graph.get(vertex);
+        if (neighbors != null) {
+            for (int neighbor : neighbors) {
+                if (visited.get(neighbor) == null) {
+                    dfs(graph, neighbor, visited);
                 }
             }
-            
-            if (treeCount == components.size()) {
-                return TopologyType.FOREST; // 所有分量都是树
-            } else if (graphCount == components.size()) {
-                return TopologyType.DISCONNECTED_GRAPH; // 所有分量都有环
-            } else {
-                return TopologyType.HYBRID; // 混合：有树也有图
-            }
         }
     }
     
-    // 辅助类：存储连通分量信息
-    private static class Component {
-        int vertexCount;
-        int edgeCount;
-        
-        Component(int vertexCount, int edgeCount) {
-            this.vertexCount = vertexCount;
-            this.edgeCount = edgeCount;
-        }
-    }
-    
-    // 找出所有连通分量
-    private static ArrayList<Component> findComponents(
-            UnorderedMap<Integer, ArrayList<Integer>> graph, 
-            ArrayList<Integer> vertices) {
-        
-        ArrayList<Component> components = new ArrayList<>();
+    private static int countComponents(UnorderedMap<Integer, ArrayList<Integer>> graph, ArrayList<Integer> vertices) {
         UnorderedMap<Integer, Boolean> visited = new UnorderedMap<>();
+        int components = 0;
         
-        // 初始化 visited
-        for (int v : vertices) {
-            visited.put(v, false);
-        }
-        
-        // 对每个未访问的顶点进行 BFS
-        for (int v : vertices) {
-            if (!visited.get(v)) {
-                Component comp = bfsComponent(graph, v, visited);
-                components.add(comp);
+        for (int vertex : vertices) {
+            if (visited.get(vertex) == null) {
+                dfs(graph, vertex, visited);
+                components++;
             }
         }
         
         return components;
     }
-    
-    // BFS 遍历一个连通分量，返回该分量的信息
-    private static Component bfsComponent(
-            UnorderedMap<Integer, ArrayList<Integer>> graph,
-            int start,
-            UnorderedMap<Integer, Boolean> visited) {
-        
-        ArrayList<Integer> queue = new ArrayList<>();
-        queue.add(start);
-        visited.put(start, true);
-        
-        int vertexCount = 0;
-        int edgeCount = 0;
-        
-        while (queue.size() > 0) {
-            int current = queue.remove(0);
-            vertexCount++;
-            
-            ArrayList<Integer> neighbors = graph.get(current);
-            if (neighbors != null) {
-                // 统计边数（每条边会被两个端点各计一次）
-                edgeCount += neighbors.size();
-                
-                for (int neighbor : neighbors) {
-                    Boolean isVisited = visited.get(neighbor);
-                    if (isVisited != null && !isVisited) {
-                        visited.put(neighbor, true);
-                        queue.add(neighbor);
-                    }
-                }
-            }
+
+    private static class WeightedEdge {
+        int toVertexId;
+        int time;
+        WeightedEdge(int toVertexId, int time) {
+            this.toVertexId = toVertexId;
+            this.time = time;
         }
-        
-        // 每条边被计数两次，所以除以2
-        edgeCount = edgeCount / 2;
-        
-        return new Component(vertexCount, edgeCount);
     }
-    
  
     /**
      * Compute the list of reachable destinations and their minimum costs.
@@ -256,6 +214,35 @@ public class Problems {
     public static <S, U> List<Entry<Integer, Integer>> routeManagement(List<Edge<S, U>> edgeList,
                                                           Vertex<S> origin, int threshold) {
         ArrayList<Entry<Integer, Integer>> answers = new ArrayList<>();
+        // if (edgeList == null || edgeList.size() == 0) {
+        //     return new ArrayList<>();
+        // }
+        // if (origin == null) {
+        //     return new ArrayList<>();
+        // }
+        // //build an unordered map to store the vertices ->[v1,v2..]
+        // UnorderedMap<Integer, ArrayList<WeightedEdge>> graph = new UnorderedMap<>();
+        // for (Edge<S, U> edge : edgeList) {
+        //     int v1 = edge.getVertex1().getId();
+        //     int v2 = edge.getVertex2().getId();
+        //     int weight = 0;
+        //     if (edge.getData() != null && edge.getData() instanceof Integer) {
+        //         weight = (int) edge.getData();
+        //     }
+        //     if (graph.get(v1) == null) {
+        //         graph.put(v1, new ArrayList<>());
+        //     }
+        //     if (graph.get(v2) == null) {
+        //         graph.put(v2, new ArrayList<>());
+        //     }
+        //     graph.get(v1).add(new WeightedEdge(v2, weight));
+        //     graph.get(v2).add(new WeightedEdge(v1, weight));
+        // }
+        // Heap<Integer, Integer> pq = new Heap<>();
+        // UnorderedMap<Integer, Boolean> visited = new UnorderedMap<>();
+        // UnorderedMap<Integer, Integer> distances = new UnorderedMap<>();
+        // distances.put(origin.getId(), 0);
+
         return answers;
     }
 
