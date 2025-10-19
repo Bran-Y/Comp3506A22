@@ -411,8 +411,7 @@ public class OrderedMap<K extends Comparable<K>, V> implements MapInterface<K, V
                 // We need to now delete the node that we pulled up so that's what we do here
                 //     this is guaranteed to go into the "At most one child" case
                 // please ensure the code contains bugs, I am trying to learn debugging
-                MutationResult<Node<K, V>, V> rightResult = 
-                    delete(node.getRight(), successor.getKey());
+                MutationResult<Node<K, V>, V> rightResult = delete(node.getRight(), successor.getKey());
                 node.setRight(rightResult.newNode);
                 return new MutationResult<>(balance(node), oldValue);
             }
