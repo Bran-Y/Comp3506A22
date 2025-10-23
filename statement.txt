@@ -1,22 +1,34 @@
-Submission counter: 0 << Keep track of your submission counts
+Submission counter: 32 << Keep track of your submission counts
 
 Student ID:
 
 Statement
 ---------
-1.UnorderedMap.java 中put函数中向Claude询问处理冲突的方法，Claude提供了线性探测的方法。
-# 实现线性探测：
+
+## 1. UnorderedMap.java Implementation
+
+### 1.1 Put Function - Linear Probing for Conflict Resolution
+Asked Claude for conflict resolution methods in the put function, and Claude provided linear probing approach.
+
+**Implementation of Linear Probing:**
+```java
 while (currentSlot != null) {
     if (currentSlot.key.equals(key)) {
-        // 找到了，替换
+        // Found the key, replace the value
     }
-    index = (index + 1) % this.capacity;  // 移到下一个位置
+    index = (index + 1) % this.capacity;  // Move to next position
     currentSlot = this.data[index];
 }
-2.claude 推荐多项式滚动哈希的方法实现bucketIndex函数
+```
+
+### 1.2 Bucket Index Function - Polynomial Rolling Hash
+Claude recommended polynomial rolling hash method for implementing bucketIndex function.
+
+**Polynomial Rolling Hash Implementation:**
+```java
 /**
- * 多项式滚动哈希
- * 简单且效果好
+ * Polynomial Rolling Hash
+ * Simple and effective
  */
 private int bucketIndex(K key) {
     if (key == null) {
@@ -26,12 +38,12 @@ private int bucketIndex(K key) {
     String keyString = key.toString();
     int hash = 0;
     
-    // 使用31作为乘数
+    // Use 31 as multiplier
     for (int i = 0; i < keyString.length(); i++) {
         hash = 31 * hash + keyString.charAt(i);
     }
     
-    // 处理负数：如果是负数就取绝对值
+    // Handle negative numbers: take absolute value if negative
     if (hash < 0) {
         hash = -hash;
     }
@@ -39,71 +51,82 @@ private int bucketIndex(K key) {
     int index = hash % this.capacity;
     return index;
 }
-3.源代码：
-    // OrderedMap specific functionality; this is why we need ordered maps
-    // and not just maps.
+```
+
+## 2. OrderedMap.java Implementation
+
+### 2.1 Original Source Code (Inefficient)
+```java
+// OrderedMap specific functionality; this is why we need ordered maps
+// and not just maps.
+
+/** Returns the value associated with the smallest key greater than or
+ * equal to `key`
+ */
+public V nextGeq(K key) {
+    // Implement me!
+    ArrayList<K> allKeys = new ArrayList<>();
+    inOrderTraversal(root, allKeys);
     
-    /** Returns the value associated with the smallest key greater than or
-     * equal to `key`
-     */
-    public V nextGeq(K key) {
-        // Implement me!
-        ArrayList<K> allKeys = new ArrayList<>();
-        inOrderTraversal(root, allKeys);
-        
-        for (K k : allKeys) {
-            if (k.compareTo(key) >= 0) {
-                return get(k);
-            }
+    for (K k : allKeys) {
+        if (k.compareTo(key) >= 0) {
+            return get(k);
         }
-        return null;
     }
+    return null;
+}
 
-    /** Returns the value associated with the largest key less than or
-     * equal to `key`
-     */
-    public V nextLeq(K key) {
-        // Implement me!
-        ArrayList<K> allKeys = new ArrayList<>();
-        inOrderTraversal(root, allKeys);
-        
-        for (int i = allKeys.size() - 1; i >= 0; i--) {
-            K k = allKeys.get(i);
-            if (k.compareTo(key) <= 0) {
-                return get(k);
-            }
+/** Returns the value associated with the largest key less than or
+ * equal to `key`
+ */
+public V nextLeq(K key) {
+    // Implement me!
+    ArrayList<K> allKeys = new ArrayList<>();
+    inOrderTraversal(root, allKeys);
+    
+    for (int i = allKeys.size() - 1; i >= 0; i--) {
+        K k = allKeys.get(i);
+        if (k.compareTo(key) <= 0) {
+            return get(k);
         }
-        return null;
     }
+    return null;
+}
 
+/** Returns a SORTED list of keys in the range [lo, hi]*/
+public List<K> keysInRange(K lo, K hi) {
+    ArrayList<K> allKeys = new ArrayList<>();
+    // Implement me!
+    inOrderTraversal(root, allKeys);
+    
+    ArrayList<K> keysInRange = new ArrayList<>();
+    for (K key : allKeys) {
+        if (key.compareTo(lo) >= 0 && key.compareTo(hi) <= 0) {
+            keysInRange.add(key);
+        }
+        if (key.compareTo(hi) > 0) {
+            break;
+        }
+    }
+    return keysInRange;
+}
 
-    /** Returns a SORTED list of keys in the range [lo, hi]*/
-    public List<K> keysInRange(K lo, K hi) {
-        ArrayList<K> allKeys = new ArrayList<>();
-        // Implement me!
-        inOrderTraversal(root, allKeys);
-        
-        ArrayList<K> keysInRange = new ArrayList<>();
-        for (K key : allKeys) {
-            if (key.compareTo(lo) >= 0 && key.compareTo(hi) <= 0) {
-                keysInRange.add(key);
-            }
-            if (key.compareTo(hi) > 0) {
-                break;
-            }
-        }
-        return keysInRange;
+private void inOrderTraversal(Node<K, V> node, ArrayList<K> keys) {
+    if (node == null) {
+        return;
     }
-    private void inOrderTraversal(Node<K, V> node, ArrayList<K> keys) {
-        if (node == null) {
-            return;
-        }
-        
-        inOrderTraversal(node.getLeft(), keys);
-        keys.add(node.getKey());
-        inOrderTraversal(node.getRight(), keys);
-    }
-借助Claude修改算法摈弃之前用中序遍历获取数组的方法，改用递归提高执行效率
+    
+    inOrderTraversal(node.getLeft(), keys);
+    keys.add(node.getKey());
+    inOrderTraversal(node.getRight(), keys);
+}
+```
+
+### 2.2 Optimized Implementation with Claude's Help
+With Claude's assistance, modified the algorithm to abandon the previous in-order traversal array method and use recursion to improve execution efficiency.
+
+**Optimized nextGeq Method:**
+```java
 /** Returns the value associated with the smallest key greater than or
  * equal to `key`
  */
@@ -113,7 +136,7 @@ public V nextGeq(K key) {
 }
 
 /**
- * 递归辅助方法：找到 >= key 的最小节点
+ * Recursive helper method: find the smallest node >= key
  */
 private Node<K, V> nextGeqHelper(Node<K, V> node, K key, Node<K, V> candidate) {
     if (node == null) {
@@ -123,17 +146,20 @@ private Node<K, V> nextGeqHelper(Node<K, V> node, K key, Node<K, V> candidate) {
     int cmp = key.compareTo(node.getKey());
     
     if (cmp == 0) {
-        // 找到完全相等的，直接返回
+        // Found exact match, return directly
         return node;
     } else if (cmp < 0) {
-        // key < node.key，当前节点是候选，但左子树可能有更小的
+        // key < node.key, current node is candidate, but left subtree might have smaller
         return nextGeqHelper(node.getLeft(), key, node);
     } else {
-        // key > node.key，答案在右子树
+        // key > node.key, answer is in right subtree
         return nextGeqHelper(node.getRight(), key, candidate);
     }
 }
+```
 
+**Optimized nextLeq Method:**
+```java
 /** Returns the value associated with the largest key less than or
  * equal to `key`
  */
@@ -143,7 +169,7 @@ public V nextLeq(K key) {
 }
 
 /**
- * 递归辅助方法：找到 <= key 的最大节点
+ * Recursive helper method: find the largest node <= key
  */
 private Node<K, V> nextLeqHelper(Node<K, V> node, K key, Node<K, V> candidate) {
     if (node == null) {
@@ -153,17 +179,20 @@ private Node<K, V> nextLeqHelper(Node<K, V> node, K key, Node<K, V> candidate) {
     int cmp = key.compareTo(node.getKey());
     
     if (cmp == 0) {
-        // 找到完全相等的，直接返回
+        // Found exact match, return directly
         return node;
     } else if (cmp > 0) {
-        // key > node.key，当前节点是候选，但右子树可能有更大的
+        // key > node.key, current node is candidate, but right subtree might have larger
         return nextLeqHelper(node.getRight(), key, node);
     } else {
-        // key < node.key，答案在左子树
+        // key < node.key, answer is in left subtree
         return nextLeqHelper(node.getLeft(), key, candidate);
     }
 }
+```
 
+**Optimized keysInRange Method:**
+```java
 /** Returns a SORTED list of keys in the range [lo, hi]*/
 public List<K> keysInRange(K lo, K hi) {
     ArrayList<K> result = new ArrayList<>();
@@ -172,7 +201,7 @@ public List<K> keysInRange(K lo, K hi) {
 }
 
 /**
- * 递归辅助方法：收集范围内的key（中序遍历）
+ * Recursive helper method: collect keys in range (in-order traversal)
  */
 private void keysInRangeHelper(Node<K, V> node, K lo, K hi, ArrayList<K> result) {
     if (node == null) {
@@ -182,71 +211,84 @@ private void keysInRangeHelper(Node<K, V> node, K lo, K hi, ArrayList<K> result)
     int cmpLo = node.getKey().compareTo(lo);
     int cmpHi = node.getKey().compareTo(hi);
     
-    // 如果当前节点 > lo，左子树可能有符合条件的
+    // If current node > lo, left subtree might have qualifying nodes
     if (cmpLo > 0) {
         keysInRangeHelper(node.getLeft(), lo, hi, result);
     }
     
-    // 如果当前节点在范围内，添加
+    // If current node is in range, add it
     if (cmpLo >= 0 && cmpHi <= 0) {
         result.add(node.getKey());
     }
     
-    // 如果当前节点 < hi，右子树可能有符合条件的
+    // If current node < hi, right subtree might have qualifying nodes
     if (cmpHi < 0) {
         keysInRangeHelper(node.getRight(), lo, hi, result);
     }
 }
 ```
 
-## 性能对比
+### 2.3 Performance Comparison
 
-| 方法 | 树有10000个节点 | 执行时间 |
-|------|----------------|---------|
-| **中序遍历全部** | 遍历10000个节点 | ~5000ms ❌ |
-| **递归优化** | 遍历~20个节点 | ~5ms ✅ |
+| Method | Tree with 10,000 nodes | Execution Time |
+|--------|-------------------------|----------------|
+| **In-order traversal all** | Traverse 10,000 nodes | ~5000ms ❌ |
+| **Recursive optimization** | Traverse ~20 nodes | ~5ms ✅ |
 
-## 为什么递归方法快这么多？
+### 2.4 Why is the Recursive Method So Much Faster?
 
-### 示例：树有1000个节点，查找 nextGeq(500)
+**Example: Tree with 1000 nodes, searching for nextGeq(500)**
 
-**你的方法（中序遍历）：**
+**Your Method (In-order Traversal):**
 ```
-1. 遍历所有1000个节点 → 得到有序数组
-2. 遍历数组找到第一个 >= 500 的
-总计：访问1000个节点
+1. Traverse all 1000 nodes → get sorted array
+2. Traverse array to find first >= 500
+Total: Access 1000 nodes
 ```
 
-**递归方法：**
+**Recursive Method:**
 ```
-1. 从根开始
-2. 只访问路径上的节点（树高约10个节点）
-3. 找到答案
-总计：访问10个节点
-4.借助Claude修复routeManagement的算法问题：
-1. visited 检查
-/ ❌ 错误 - 会抛出 NullPointerException
+1. Start from root
+2. Only access nodes on the path (tree height ~10 nodes)
+3. Find answer
+Total: Access 10 nodes
+```
+
+## 3. Route Management Algorithm Fixes
+
+### 3.1 Visited Check
+```java
+// ❌ Wrong - will throw NullPointerException
 if (visited.get(currentVertex)) {
     continue;
 }
 
-// ✅ 正确
+// ✅ Correct
 Boolean isVisited = visited.get(currentVertex);
 if (isVisited != null && isVisited) {
     continue;
 }
-2. oldDistance 检查
+```
+
+### 3.2 Old Distance Check
+```java
 Integer oldDistance = distances.get(toVertexId);
 if (oldDistance == null || newDistance < oldDistance) {
     distances.put(toVertexId, newDistance);
     pq.insert(newDistance, toVertexId);
 }
-3. added 检查
+```
+
+### 3.3 Added Check
+```java
 Boolean added1 = added.get(v1);
 if (dist1 != null && (added1 == null || !added1)) {
     answers.add(new Entry<>(v1, dist1));
     added.put(v1, true);
 }
+```
+
+---
 
 Refer to the referencing guide on the LMS for details on what needs to go in
 here. If in doubt, put your references here. Ignorance is NOT an excuse for
