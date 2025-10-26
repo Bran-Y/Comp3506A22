@@ -183,6 +183,7 @@ public class OrderedMap<K extends Comparable<K>, V> implements MapInterface<K, V
             return nextGeqHelper(node.getRight(), key, candidate);
         }
     }
+    
     /** Returns the value associated with the largest key less than or
      * equal to `key`
      */
@@ -292,8 +293,10 @@ public class OrderedMap<K extends Comparable<K>, V> implements MapInterface<K, V
         updateHeight(x);
         return x;
     }
+    
     /**
-     * Rotates node x such that y becomes the parent
+     * Rotates node x such that y becomes the parent.
+     * The mirror of the rotateRight shown above
      *
      *     y                x
      *    / \              / \
@@ -301,7 +304,6 @@ public class OrderedMap<K extends Comparable<K>, V> implements MapInterface<K, V
      *  / \                  / \
      * T1 T2                T2 T3
      */
-    /** The mirror of the rotateRight shown above */
     private Node<K, V> rotateLeft(Node<K, V> x) {
         // uh oh... implement me!
         // you can do it without AI, I believe in you

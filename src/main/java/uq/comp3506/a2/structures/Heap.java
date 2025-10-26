@@ -171,11 +171,11 @@ public class Heap<K extends Comparable<K>, V> {
             return null;
         }
         
+        Entry<K, V> min;
         // Get the last element
         int last = this.size - 1;
-        
         // Save the min element
-        Entry<K, V> min = this.data.get(0);
+        min = this.data.get(0);
         
         // Move last element to root
         this.data.set(0, this.data.get(last));
